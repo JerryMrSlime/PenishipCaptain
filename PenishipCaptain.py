@@ -40,14 +40,14 @@ class Player(object):
 		#Movement vars
 		self.x, self.y = 0, 0
 		self.vx, self.vy = 0, 0
-		self.width = self.images[0].get_width
-		self.height = self.images[0].get_height
+		self.width = self.images[0].get_width()
+		self.height = self.images[0].get_height()
 		self.speed = 5
 		self.friction = 0.6
 		self.rect = Rectangle(self.x, self.y, self.width, self.height)
 		#Shot vars
 		self.bullets = []
-		self.shot = True
+		self.shoot = True
 		
 	def Update(self):
 		self.updateAnimation()
@@ -84,9 +84,12 @@ class Player(object):
 			self.vx = -self.speed
 		else:
 			self.vx = 0
-		if key[K_SPACE] and self.shot:
-			self.bullets.append(Bullet(self.x, self.y, self.bullet_img))
 			
+	def Shoot(self):
+		self.bx = self.x + self.width + 2
+		self.by = self.y + 16
+		self.bullets.append(Bullet(self.bx, self.by, self.bullet_img))
+		
 	def movementUpdate(self):
 		self.vx = self.vx * self.friction
 		self.vy = self.vy * self.friction
@@ -124,7 +127,6 @@ class Bullet(object):
 	def setBounds(self):
 		if self.x > 800 or self.x < 0 or self.y > 600 or self.y < 0:
 			self.death = True
-			print "Bullet destroyed"
 			
 	def Render(self, screen):
 		screen.blit(self.img, (self.x, self.y))
@@ -165,6 +167,9 @@ def main():
 		for event in py.event.get():
 			if event.type == QUIT:
 				exit = True
+			elif event.type == KEYDOWN:
+				if event.key == K_SPACE:
+					player.Shoot()
 				
 		player.Render(screen)
 		player.Update()
