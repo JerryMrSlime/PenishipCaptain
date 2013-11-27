@@ -29,10 +29,13 @@ from random import randrange
 
 class EnemiesManager(object):
 	def __init__(self):
-		self.img = py.image.load("resources/graphics/basic_enemy.png")
+		self.img = []
 		self.enemies = []
 		self.time = 0
 		self.spawnDelay = 1 * 1000 #Seconds -> milliseconds
+		self.scale = 2
+		self.loadImages()
+		self.scaleImages()
 		
 	def Render(self, screen):
 		for enemy in self.enemies:
@@ -57,38 +60,59 @@ class EnemiesManager(object):
 		if kind == 1:
 			self.enemies.append(BasicEnemy(800, y, self.img))
 		
+	def loadImages(self):
+		for i in range(1, 3):
+			self.img.append(py.image.load("resources/graphics/basic_enemy_"+str(i)+".png").convert_alpha())
+			
+	def scaleImages(self):
+		for i in range(0, len(self.img)):
+			self.img[i] = py.transform.scale(self.img[i], (self.img[i].get_width() * self.scale, self.img[i].get_height() * self.scale))
+		
 class Enemy(object):
 	def __init__(self, x, y, img):
 		self.x = x
 		self.y = y
 		self.img = img
-		self.width = self.img.get_width()
-		self.height = self.img.get_height()
+		self.width = self.img[0].get_width()
+		self.height = self.img[0].get_height()
 		self.rect = Rectangle(self.x, self.y, self.width, self.height)
 		self.life = 0
 		self.vx = 0
 		self.vy = 0
 		self.speed = 0
 		self.friction = 0.6
+		self.frame = 0
+		self.delay = 250
+		self.time = 0
 	
 	def Update(self):
 		self.Move()
 		self.rect.Update(self.x, self.y)
+		self.animationTimer()
 	
 	def Render(self, screen):
-		screen.blit(self.img, (self.x, self.y))
+		screen.blit(self.img[self.frame], (self.x, self.y))
 		
 	def Move(self):
 		if self.y < 0 or self.y > 600 - self.height:
 			self.vy *= -1
 		self.x += self.vx * self.friction
 		self.y += self.vy * self.friction
+	
+	def animationTimer(self):
+		if py.time.get_ticks() - self.time > self.delay:
+			self.time = py.time.get_ticks()
+			self.frame += 1
+			if self.frame > 1:
+				self.frame = 0
+
+		
 		
 class BasicEnemy(Enemy):
 	def __init__(self, x, y, img):
 		Enemy.__init__(self, x, y, img)
 		self.life = 20
-		self.speed = randrange(2, 6)
+		self.speed = randrange(1, 3)
 		self.vx = -self.speed
 		self.speed = randrange(2, 6)
 		self.vy = self.speed
@@ -111,6 +135,8 @@ class Player(object):
 		self.speed = 5
 		self.friction = 0.6
 		self.rect = Rectangle(self.x, self.y, self.width, self.height)
+		self.scale = 1
+		self.scaleImages()
 		#Shot vars
 		self.bullets = []
 		self.shoot = True
@@ -169,6 +195,10 @@ class Player(object):
 			if self.currentFrame > 1:
 				self.currentFrame = 0
 	
+	def scaleImages(self):
+		for i in range (0, 1):
+			self.images[i] = py.transform.scale(self.images[i], (self.width * self.scale, self.height * self.scale))
+			
 	def loadImages(self):
 		for i in range (1, 3):
 			self.images.append(py.image.load("resources/graphics/player_"+str(i)+".png").convert_alpha())
