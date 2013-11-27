@@ -90,6 +90,7 @@ class BasicEnemy(Enemy):
 		self.life = 20
 		self.speed = randrange(2, 6)
 		self.vx = -self.speed
+		self.speed = randrange(2, 6)
 		self.vy = self.speed
 	
 
