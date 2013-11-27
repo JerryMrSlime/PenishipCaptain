@@ -27,6 +27,36 @@ import pygame as py
 from pygame.locals import *
 from random import randrange
 
+class EnemiesManager(object):
+	def __init__(self):
+		self.img = py.image.load("resources/graphics/basic_enemy.png")
+		self.enemies = []
+		self.time = 0
+		self.spawnDelay = 1 * 1000 #Seconds -> milliseconds
+		
+	def Render(self, screen):
+		for enemy in self.enemies:
+			enemy.Render(screen)
+			
+	def Update(self):
+		for enemy in self.enemies:
+			enemy.Update()
+		
+		self.spawnEnemy()
+			
+	def spawnEnemy(self):
+		self.Timer()
+	
+	def Timer(self):
+		if py.time.get_ticks() - self.time > self.spawnDelay:
+			self.time = py.time.get_ticks()
+			self.Spawn(1)
+		
+	def Spawn(self, kind):
+		y = randrange(0, 600)
+		if kind == 1:
+			self.enemies.append(BasicEnemy(800, y, self.img))
+		
 class Enemy(object):
 	def __init__(self, x, y, img):
 		self.x = x
@@ -35,22 +65,33 @@ class Enemy(object):
 		self.width = self.img.get_width()
 		self.height = self.img.get_height()
 		self.rect = Rectangle(self.x, self.y, self.width, self.height)
-		
+		self.life = 0
 		self.vx = 0
 		self.vy = 0
-		self.speed = 5
+		self.speed = 0
 		self.friction = 0.6
 	
 	def Update(self):
 		self.Move()
-		self.rect.Update()
+		self.rect.Update(self.x, self.y)
 	
 	def Render(self, screen):
 		screen.blit(self.img, (self.x, self.y))
 		
-	def Move():
-		self.x += self.vx
-		self.y += self.vy
+	def Move(self):
+		if self.y < 0 or self.y > 600 - self.height:
+			self.vy *= -1
+		self.x += self.vx * self.friction
+		self.y += self.vy * self.friction
+		
+class BasicEnemy(Enemy):
+	def __init__(self, x, y, img):
+		Enemy.__init__(self, x, y, img)
+		self.life = 20
+		self.speed = randrange(2, 6)
+		self.vx = -self.speed
+		self.vy = self.speed
+	
 
 class Player(object):
 	def __init__(self):
@@ -185,6 +226,7 @@ def main():
 	exit = False
 	
 	player = Player()
+	enemiesManager = EnemiesManager()
 	
 	while not exit:
 		screen.fill(clear)
@@ -196,7 +238,9 @@ def main():
 					player.Shoot()
 				
 		player.Render(screen)
+		enemiesManager.Render(screen)
 		player.Update()
+		enemiesManager.Update()
 		py.display.update()
 		clock.tick(60)
 	return 0
