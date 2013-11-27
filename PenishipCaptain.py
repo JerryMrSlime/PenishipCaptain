@@ -27,6 +27,108 @@ import pygame as py
 from pygame.locals import *
 from random import randrange
 
+
+class Player(object):
+	def __init__(self):
+		#Render vars
+		self.images = []
+		self.loadImages()
+		#Timer vars
+		self.currentFrame = 0
+		self.elapsedTime = 0
+		self.delay = 100
+		#Movement vars
+		self.x, self.y = 0, 0
+		self.vx, self.vy = 0, 0
+		self.width = self.images[0].get_width
+		self.height = self.images[0].get_height
+		self.speed = 5
+		self.friction = 0.6
+		self.rect = Rectangle(self.x, self.y, self.width, self.height)
+		#Shot vars
+		self.bullets = []
+		self.shot = True
+		
+	def Update(self):
+		self.updateAnimation()
+		self.Controls()
+		self.movementUpdate()
+		self.rect.Update(self.x, self.y)
+		self.updateBullets()
+		
+	def Render(self, screen):
+		screen.blit(self.images[self.currentFrame], (self.x, self.y))
+		self.renderBullets(screen)
+	
+	def updateBullets(self):
+		for bullet in self.bullets:
+			bullet.Update()
+			if bullet.death:
+				self.bullets.remove(bullet)
+			
+	def renderBullets(self, screen):
+		for bullet in self.bullets:
+			bullet.Render(screen)
+			
+	def Controls(self):
+		key = py.key.get_pressed()
+		if key[K_UP]:
+			self.vy = -self.speed
+		elif key[K_DOWN]:
+			self.vy = self.speed
+		else:
+			self.vy = 0
+		if key[K_RIGHT]:
+			self.vx = self.speed
+		elif key[K_LEFT]:
+			self.vx = -self.speed
+		else:
+			self.vx = 0
+		if key[K_SPACE] and self.shot:
+			self.bullets.append(Bullet(self.x, self.y, self.bullet_img))
+			
+	def movementUpdate(self):
+		self.vx = self.vx * self.friction
+		self.vy = self.vy * self.friction
+		self.x += self.vx
+		self.y += self.vy
+		
+	def updateAnimation(self):
+		if py.time.get_ticks() - self.elapsedTime > self.delay:
+			self.elapsedTime = py.time.get_ticks()
+			self.currentFrame += 1
+			if self.currentFrame > 1:
+				self.currentFrame = 0
+	
+	def loadImages(self):
+		for i in range (1, 3):
+			self.images.append(py.image.load("resources/graphics/player_"+str(i)+".png").convert_alpha())
+		self.bullet_img = py.image.load("resources/graphics/ball.png").convert_alpha()
+
+class Bullet(object):
+	def __init__(self, x, y, img):
+		self.x = x
+		self.y = y
+		self.img = img
+		self.width = self.img.get_width()
+		self.height = self.img.get_height()
+		self.rect = Rectangle(self.x, self.y, self.width, self.height)
+		self.death = False
+		self.speed = 5
+		
+	def Update(self):
+		self.rect.Update(self.x, self.y)
+		self.x += self.speed
+		self.setBounds()
+	
+	def setBounds(self):
+		if self.x > 800 or self.x < 0 or self.y > 600 or self.y < 0:
+			self.death = True
+			print "Bullet destroyed"
+			
+	def Render(self, screen):
+		screen.blit(self.img, (self.x, self.y))
+		
 class Collision(object):
 	def Update(self, r1, r2):
 		if (r1.x > r2.width + r2.x or
@@ -47,71 +149,12 @@ class Rectangle(object):
 		self.x = x
 		self.y = y
 		
-class Player(object):
-	def __init__(self):
-		#Render vars
-		self.images = []
-		self.loadImages()
-		#Timer vars
-		self.currentFrame = 0
-		self.elapsedTime = 0
-		self.delay = 100
-		#Movement vars
-		self.x, self.y = 0, 0
-		self.vx, self.vy = 0, 0
-		self.width = self.images[0].get_width
-		self.height = self.images[0].get_height
-		self.speed = 5
-		self.friction = 0.6
-		self.rect = Rectangle(self.x, self.y, self.width, self.height)
-		
-	def Update(self):
-		self.updateAnimation()
-		self.Controls()
-		self.movementUpdate()
-		self.rect.Update(self.x, self.y)
-		
-	def Render(self, screen):
-		screen.blit(self.images[self.currentFrame], (self.x, self.y))
-		
-	def Controls(self):
-		key = py.key.get_pressed()
-		if key[K_UP]:
-			self.vy = -self.speed
-		elif key[K_DOWN]:
-			self.vy = self.speed
-		else:
-			self.vy = 0
-		if key[K_RIGHT]:
-			self.vx = self.speed
-		elif key[K_LEFT]:
-			self.vx = -self.speed
-		else:
-			self.vx = 0
-	
-	def movementUpdate(self):
-		self.vx = self.vx * self.friction
-		self.vy = self.vy * self.friction
-		self.x += self.vx
-		self.y += self.vy
-		
-	def updateAnimation(self):
-		if py.time.get_ticks() - self.elapsedTime > self.delay:
-			self.elapsedTime = py.time.get_ticks()
-			self.currentFrame += 1
-			if self.currentFrame > 1:
-				self.currentFrame = 0
-	
-	def loadImages(self):
-		for i in range (1, 3):
-			self.images.append(py.image.load("resources/graphics/player_"+str(i)+".png").convert_alpha())
-
 def main():
 	py.init()
 	screen = py.display.set_mode((800, 600))
 	py.display.set_caption("PenishipCaptain")
 	
-	clear = (0, 0, 0)
+	clear = (135, 206, 250)
 	clock = py.time.Clock()
 	exit = False
 	
