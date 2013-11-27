@@ -27,6 +27,26 @@ import pygame as py
 from pygame.locals import *
 from random import randrange
 
+class Collision(object):
+	def Update(self, r1, r2):
+		if (r1.x > r2.width + r2.x or
+		r1.y > r2.height + r2.y or
+		r1.x + r1.width < r2.x or
+		r1.y + r1.height < r2.y):
+			return False
+		else:
+			return True
+		
+class Rectangle(object):
+	def __init__(self, x, y, w, h):
+		self.x = x
+		self.y = y
+		self.width = w
+		self.height = h
+	def Update(self, x, y):
+		self.x = x
+		self.y = y
+		
 class Player(object):
 	def __init__(self):
 		#Render vars
@@ -39,13 +59,17 @@ class Player(object):
 		#Movement vars
 		self.x, self.y = 0, 0
 		self.vx, self.vy = 0, 0
+		self.width = self.images[0].get_width
+		self.height = self.images[0].get_height
 		self.speed = 5
 		self.friction = 0.6
+		self.rect = Rectangle(self.x, self.y, self.width, self.height)
 		
 	def Update(self):
 		self.updateAnimation()
 		self.Controls()
 		self.movementUpdate()
+		self.rect.Update(self.x, self.y)
 		
 	def Render(self, screen):
 		screen.blit(self.images[self.currentFrame], (self.x, self.y))
