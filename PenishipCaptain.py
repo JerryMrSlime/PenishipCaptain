@@ -27,6 +27,30 @@ import pygame as py
 from pygame.locals import *
 from random import randrange
 
+class Enemy(object):
+	def __init__(self, x, y, img):
+		self.x = x
+		self.y = y
+		self.img = img
+		self.width = self.img.get_width()
+		self.height = self.img.get_height()
+		self.rect = Rectangle(self.x, self.y, self.width, self.height)
+		
+		self.vx = 0
+		self.vy = 0
+		self.speed = 5
+		self.friction = 0.6
+	
+	def Update(self):
+		self.Move()
+		self.rect.Update()
+	
+	def Render(self, screen):
+		screen.blit(self.img, (self.x, self.y))
+		
+	def Move():
+		self.x += self.vx
+		self.y += self.vy
 
 class Player(object):
 	def __init__(self):
